@@ -6,7 +6,7 @@ import (
 )
 
 func main() {
-	update := updater_client.NewUpdater()
+	update := updater.NewUpdater()
 	err := update.UpdateFile(url, "example/test.txt")
 	if err != nil {
 		fmt.Println("err:", err)

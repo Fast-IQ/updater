@@ -1,4 +1,4 @@
-package updater_client
+package updater
 
 import (
 	"bytes"
