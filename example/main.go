@@ -7,7 +7,7 @@ import (
 
 func main() {
 	update := updater_client.NewUpdater()
-	err := update.UpdateFile("http://vwDevLock.sima-land.local:32131", "example/test.txt")
+	err := update.UpdateFile(url, "example/test.txt")
 	if err != nil {
 		fmt.Println("err:", err)
 	}
