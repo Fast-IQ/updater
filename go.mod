@@ -1,3 +1,3 @@
-module github.com/Fast-IQ/updater-client
+module github.com/Fast-IQ/updater
 
 go 1.23

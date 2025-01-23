@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/Fast-IQ/updater-client"
+	"github.com/Fast-IQ/updater"
 )
 
 func main() {

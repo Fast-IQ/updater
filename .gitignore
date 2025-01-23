@@ -31,4 +31,4 @@ lib64/
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
 /example/test.txt*
-/excample/var.go
+/example/var.go
