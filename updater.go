@@ -11,14 +11,16 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 )
 
 type Updater struct {
 	urlServer  string
 	updateFile string
-	path       string
-	appName    string
+	updatePath string
+	pathApp    string
+	nameApp    string
 	time       time.Time
 }
 
@@ -27,19 +29,26 @@ func NewUpdater() *Updater {
 	if err != nil {
 		panic(err)
 	}
+	app := filepath.Base(os.Args[0])
+	path := strings.Replace(ex, app, "", 1)
 	return &Updater{
-		path:      filepath.Dir(ex),
-		appName:   filepath.Base(os.Args[0]),
+		pathApp:   path,
+		nameApp:   app,
 		urlServer: "",
 	}
 }
 
 func (u *Updater) UpdateFile(url string, nameFile string) error {
 	if nameFile == "" {
-		u.updateFile = u.appName
+		u.updateFile = u.nameApp
 	} else {
-		u.path = filepath.Dir(nameFile)
 		u.updateFile = filepath.Base(nameFile)
+	}
+
+	if filepath.Dir(nameFile) == "." {
+		u.updatePath = u.pathApp
+	} else {
+		u.updatePath = filepath.Dir(nameFile)
 	}
 
 	if url > "" {
@@ -64,7 +73,7 @@ func (u *Updater) UpdateFile(url string, nameFile string) error {
 
 func (u *Updater) compareTimeNeedUpdate() (needUpdate bool, err error) {
 	var fileTime time.Time
-	pf := filepath.Join(u.path, u.updateFile)
+	pf := filepath.Join(u.updatePath, u.updateFile)
 	if _, err = os.Stat(pf); err != nil {
 		if os.IsNotExist(err) {
 			return true, nil
@@ -134,7 +143,7 @@ func (u *Updater) updateFromServer() error {
 }
 
 func (u *Updater) urlRequest(pathUrl string, buf *bytes.Buffer) error {
-	reqUrl, err := url.JoinPath(u.urlServer, "update", pathUrl, u.path, u.updateFile)
+	reqUrl, err := url.JoinPath(u.urlServer, "update", pathUrl, u.updatePath, u.updateFile)
 	if err != nil {
 		return err
 	}
@@ -155,7 +164,7 @@ func (u *Updater) urlRequest(pathUrl string, buf *bytes.Buffer) error {
 }
 
 func (u *Updater) replaceFile(data io.Reader) error {
-	pu := filepath.Join(u.path, u.updateFile)
+	pu := filepath.Join(u.updatePath, u.updateFile)
 
 	//update
 	if _, err := os.Stat(pu); err == nil {
@@ -185,7 +194,7 @@ func (u *Updater) replaceFile(data io.Reader) error {
 }
 
 func (u *Updater) delOldVersion() error {
-	pu := filepath.Join(u.path, u.updateFile)
+	pu := filepath.Join(u.updatePath, u.updateFile)
 
 	//delete old file before update
 	if _, err := os.Stat(pu + "_old"); err == nil {
@@ -199,5 +208,5 @@ func (u *Updater) delOldVersion() error {
 }
 
 func (u *Updater) Update(url string) error {
-	return u.UpdateFile(url, u.appName)
+	return u.UpdateFile(url, u.nameApp)
 }

@@ -8,7 +8,7 @@ import (
 func main() {
 	url := "127.0.0.1:8080"
 	update := updater.NewUpdater()
-	err := update.UpdateFile(url, "example/test.txt")
+	err := update.UpdateFile(url, "test.txt")
 	if err != nil {
 		fmt.Println("err:", err)
 	}
