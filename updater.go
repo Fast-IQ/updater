@@ -46,7 +46,7 @@ func (u *Updater) UpdateFile(url string, nameFile string) error {
 	}
 
 	if filepath.Dir(nameFile) == "." {
-		u.updatePath = u.pathApp
+		u.updatePath = ""
 	} else {
 		u.updatePath = filepath.Dir(nameFile)
 	}
@@ -73,7 +73,7 @@ func (u *Updater) UpdateFile(url string, nameFile string) error {
 
 func (u *Updater) compareTimeNeedUpdate() (needUpdate bool, err error) {
 	var fileTime time.Time
-	pf := filepath.Join(u.updatePath, u.updateFile)
+	pf := filepath.Join(u.pathApp, u.updatePath, u.updateFile)
 	if _, err = os.Stat(pf); err != nil {
 		if os.IsNotExist(err) {
 			return true, nil
@@ -164,8 +164,12 @@ func (u *Updater) urlRequest(pathUrl string, buf *bytes.Buffer) error {
 }
 
 func (u *Updater) replaceFile(data io.Reader) error {
-	pu := filepath.Join(u.updatePath, u.updateFile)
+	pu := filepath.Join(u.pathApp, u.updatePath, u.updateFile)
 
+	err := os.MkdirAll(filepath.Dir(pu), 0755)
+	if err != nil {
+		return err
+	}
 	//update
 	if _, err := os.Stat(pu); err == nil {
 		//file exist -> Rename File
@@ -194,7 +198,7 @@ func (u *Updater) replaceFile(data io.Reader) error {
 }
 
 func (u *Updater) delOldVersion() error {
-	pu := filepath.Join(u.updatePath, u.updateFile)
+	pu := filepath.Join(u.pathApp, u.updatePath, u.updateFile)
 
 	//delete old file before update
 	if _, err := os.Stat(pu + "_old"); err == nil {
