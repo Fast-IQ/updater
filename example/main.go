@@ -1,8 +1,8 @@
 package main
 
 import (
-	"fmt"
 	"github.com/Fast-IQ/updater"
+	"log/slog"
 )
 
 func main() {
@@ -10,7 +10,6 @@ func main() {
 	update := updater.NewUpdater()
 	err := update.UpdateFile(url, "example/test.txt")
 	if err != nil {
-		fmt.Println("err:", err)
+		slog.Error("Error update", slog.String("err:", err.Error()))
 	}
-
 }

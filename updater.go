@@ -3,7 +3,6 @@ package updater
 import (
 	"bytes"
 	"errors"
-	"fmt"
 	"io"
 	"log/slog"
 	"net/http"
@@ -57,7 +56,9 @@ func (u *Updater) UpdateFile(url string, nameFile string) error {
 
 	err := u.delOldVersion()
 	if err != nil {
-		slog.Error("Can`t delete old version.", err)
+		slog.Error(
+			"Can`t delete old version.",
+			slog.String("Error", err.Error()))
 	}
 
 	needUpdate, err := u.compareTimeNeedUpdate()
@@ -89,8 +90,8 @@ func (u *Updater) compareTimeNeedUpdate() (needUpdate bool, err error) {
 		fileTime = timeSpec.ModTime() //	BirthTime()	ChangeTime() ModTime() AccessTime()
 
 		serverTime, err := u.getIntTimeFromServer()
-		fmt.Println("Server time:", serverTime)
-		fmt.Println("Local time:", fileTime.Unix())
+		slog.Info("Server", slog.Int64("time", serverTime))
+		slog.Info("Local", slog.Int64("time", fileTime.Unix()))
 		u.time = time.Unix(serverTime, 0)
 		return serverTime > fileTime.Unix(), nil
 	}
