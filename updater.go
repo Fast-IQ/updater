@@ -5,8 +5,9 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
-	url2 "net/url"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -14,7 +15,7 @@ import (
 )
 
 type Updater struct {
-	url        string
+	urlServer  string
 	updateFile string
 	path       string
 	appName    string
@@ -27,9 +28,9 @@ func NewUpdater() *Updater {
 		panic(err)
 	}
 	return &Updater{
-		path:    filepath.Dir(ex),
-		appName: filepath.Base(os.Args[0]),
-		url:     "",
+		path:      filepath.Dir(ex),
+		appName:   filepath.Base(os.Args[0]),
+		urlServer: "",
 	}
 }
 
@@ -42,11 +43,19 @@ func (u *Updater) UpdateFile(url string, nameFile string) error {
 	}
 
 	if url > "" {
-		u.url = url
+		u.urlServer = url
+	}
+
+	err := u.delOldVersion()
+	if err != nil {
+		slog.Error("Can`t delete old version.", err)
 	}
 
 	needUpdate, err := u.compareTimeNeedUpdate()
-	if err == nil && needUpdate {
+	if err != nil {
+		return err
+	}
+	if needUpdate {
 		err = u.updateFromServer()
 	}
 
@@ -125,7 +134,7 @@ func (u *Updater) updateFromServer() error {
 }
 
 func (u *Updater) urlRequest(pathUrl string, buf *bytes.Buffer) error {
-	reqUrl, err := url2.JoinPath(u.url, "update", pathUrl, u.path, u.updateFile)
+	reqUrl, err := url.JoinPath(u.urlServer, "update", pathUrl, u.path, u.updateFile)
 	if err != nil {
 		return err
 	}
@@ -147,15 +156,6 @@ func (u *Updater) urlRequest(pathUrl string, buf *bytes.Buffer) error {
 
 func (u *Updater) replaceFile(data io.Reader) error {
 	pu := filepath.Join(u.path, u.updateFile)
-
-	//delete old file before update
-	if _, err := os.Stat(pu + "_old"); err == nil {
-		//file exist
-		err = os.Remove(pu + "_old")
-		if err != nil {
-			return err
-		}
-	}
 
 	//update
 	if _, err := os.Stat(pu); err == nil {
@@ -180,6 +180,20 @@ func (u *Updater) replaceFile(data io.Reader) error {
 	err = os.Chtimes(pu, u.time, u.time)
 	if err != nil {
 		return err
+	}
+	return nil
+}
+
+func (u *Updater) delOldVersion() error {
+	pu := filepath.Join(u.path, u.updateFile)
+
+	//delete old file before update
+	if _, err := os.Stat(pu + "_old"); err == nil {
+		//file exist
+		err = os.Remove(pu + "_old")
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
